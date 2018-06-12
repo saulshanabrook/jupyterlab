@@ -326,10 +326,28 @@ const tools: JupyterLabPlugin<ICellTools> = {
 };
 
 
+const examplePlugin: JupyterLabPlugin<void> = {
+  activate: (app, tracker: INotebookTracker) => {
+    // app.commands.execute('xkcd:open', {});
+    console.log('example plugin', app, tracker);
+    tracker.activeCellChanged.connect(
+      (_, cell) => {
+        cell.model.value.text += 'HI THERE';
+        // console.log(cell);
+        // cell.editor.newIndentedLine();
+      }
+    );
+  },
+  id: '@jupyterlab/notebook-extension:example',
+  autoStart: true,
+  requires: [INotebookTracker]
+};
+
+
 /**
  * Export the plugins as default.
  */
-const plugins: JupyterLabPlugin<any>[] = [factory, trackerPlugin, tools];
+const plugins: JupyterLabPlugin<any>[] = [factory, trackerPlugin, tools, examplePlugin];
 export default plugins;
 
 
