@@ -133,6 +133,19 @@ export class ForeignHandler implements IDisposable {
           cell.model.outputs.clear(wait);
         }
         return true;
+      case 'status':
+        switch (msg.content.execution_state) {
+          case 'idle':
+            cell.model.metadata.set('timing.status_idle_sent', msg.header
+              .date as string);
+            return;
+          case 'busy':
+            cell.model.metadata.set('timing.status_busy_sent', msg.header
+              .date as string);
+            return;
+          default:
+            return;
+        }
       default:
         return false;
     }
