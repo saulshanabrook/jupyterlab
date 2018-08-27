@@ -142,6 +142,12 @@
   version "1.1.1"
   resolved "https://registry.npmjs.org/@types/comment-json/-/comment-json-1.1.1.tgz#b4ae889912a93e64619f97989aecaff8ce889dca"
 
+"@types/create-subscription@16.4.1":
+  version "16.4.1"
+  resolved "https://registry.npmjs.org/@types/create-subscription/-/create-subscription-16.4.1.tgz#694150d3877e65f654b98c0189da3590e39ff46d"
+  dependencies:
+    "@types/react" "*"
+
 "@types/events@*":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@types/events/-/events-1.2.0.tgz#81a6731ce4df43619e5c8c945383b3e62a89ea86"
@@ -2204,6 +2210,12 @@ create-react-class@^15.6.2:
     fbjs "^0.8.9"
     loose-envify "^1.3.1"
     object-assign "^4.1.1"
+
+create-subscription@16.4.2:
+  version "16.4.2"
+  resolved "https://registry.npmjs.org/create-subscription/-/create-subscription-16.4.2.tgz#378965db33b370ffa3e81c345564eed734df44ed"
+  dependencies:
+    fbjs "^0.8.16"
 
 cross-spawn@^5.0.1, cross-spawn@^5.1.0:
   version "5.1.0"

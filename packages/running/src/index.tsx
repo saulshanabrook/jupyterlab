@@ -13,6 +13,26 @@ import { ISignal, Signal } from '@phosphor/signaling';
 
 import { Widget } from '@phosphor/widgets';
 
+// import { createSubscription } from 'create-subscription';
+
+// interface ISignalSubscriptionSource<T, U> {
+//   signal: ISignal<T, U>;
+//   value: [T, U];
+// }
+// tslint:disable-next-line:variable-name
+// const SignalSubscription = createSubscription({
+//   getCurrentValue<T, U>(source: ISignalSubscriptionSource<T, U>) {
+//     return source.value;
+//   },
+//   subscribe<T, U>(
+//     source: ISignalSubscriptionSource<T, U>,
+//     callback: ([any, any]) => void
+//   ) {
+//     source.signal.connect(callback);
+//     return () => source.signal.disconnect(callback);
+//   }
+// });
+
 import {
   Dialog,
   showDialog,
