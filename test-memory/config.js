@@ -1,6 +1,5 @@
 // URL to the web application.
-exports.url =
-  'http://localhost:8888/?token=e43cb3ad15eee417013436fa5aaf5897fd91be5aa528ac2a';
+exports.url = 'http://localhost:8888/lab';
 // Runs your program in a loop. Each item in the array is a `state`. Each `state` has a "check"
 // function, and a "next" function to transition to the next state in the loop. These run
 // in the global scope of your web app.
@@ -13,9 +12,10 @@ exports.loop = [
   {
     // Return 'true' if the web application is ready for `next` to be run.
     check: function() {
+      return true;
       return (
-        lab.shell.currentWidget == null ||
-        lab.shell.currentWidget.constructor.name == 'MainAreaWidget'
+        window.lab.shell.currentWidget == null ||
+        window.lab.shell.currentWidget.constructor.name == 'MainAreaWidget'
       );
     },
     // Transitions to the next state.
@@ -46,7 +46,7 @@ exports.iterations = 8;
 
 // (Optional) An array of states describing how to login to the application. Executed *once*
 // to set up the session. See 'config.loop' for a description of a state.
-// exports.login = [
+exports.login = [];
 //   {
 //     check: function() {
 //       // Return 'true' if the element 'password-field' exists.
@@ -69,16 +69,16 @@ exports.iterations = 8;
 // exports.setup = [];
 // (Optional) How long (in milliseconds) to wait for a state transition to finish before declaring an error.
 // Defaults to 10 minutes
-exports.timeout = 30 * 1000;
+// exports.timeout = 30 * 1000;
 // (Optional) How long (in milliseconds) to wait between a check() returning 'true' and transitioning to the next step or taking a heap snapshot.
 // Default: 1000
-exports.postCheckSleep = 1000;
+// exports.postCheckSleep = 1000;
 // (Optional) How long (in milliseconds) to wait between transitioning to the next step and running check() for the first time.
 // Default: 0
-exports.postNextSleep = 0;
+// exports.postNextSleep = 0;
 // (Optional) How long (in milliseconds) to wait between submitting login credentials and reloading the page for a run.
 // Default: 5000
-exports.postLoginSleep = 5000;
+// exports.postLoginSleep = 5000;
 // (Optional) An array of numerical IDs identifying leaks with fixes in your code. Used to
 // evaluate memory savings with different leak configurations and the effectiveness of bug fixes.
 // In the code, condition the fix on $$$SHOULDFIX$$$(ID), or add logic to `exports.rewrite` (see below),
