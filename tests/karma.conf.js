@@ -7,7 +7,10 @@ module.exports = function(config) {
   config.set({
     basePath: '.',
     frameworks: ['mocha'],
-    reporters: ['mocha'],
+    reporters: ['mocha', 'junit'],
+    junitReporter: {
+      outputFile: 'junit.xml'
+    },
     client: {
       captureConsole: true,
       mocha: {

@@ -3,7 +3,7 @@ var baseConf = require('./karma.conf');
 
 module.exports = function(config) {
   baseConf(config);
-  config.reporters = ['mocha', 'coverage-istanbul'];
+  config.reporters.push('coverage-istanbul');
   config.webpack.module.rules.push(
     // instrument only testing sources with Istanbul
     {
