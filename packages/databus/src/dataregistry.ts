@@ -10,14 +10,12 @@ import { ISignal, Signal } from '@phosphor/signaling';
 /**
  * An interface for an abstract dataset, with a mimetype, URI, and data.
  *
- * This is templated over the type of data `T`.
- *
  * #### Notes
  * This interface is similar conceptually to that of nbformat.IMimeBundle,
  * but with only a single mimetype and different structure. We expect there
  * to be utilities to convert between this formats.
  */
-export interface IDataset<T> {
+export interface IDataset {
   /**
    * The string mimetype for the dataset.
    */
@@ -32,27 +30,12 @@ export interface IDataset<T> {
    * as the datasets themselves are not assumed to be serializable.
    */
   uri?: string;
-
-  /***
-   * The data of the dataset.
-   *
-   * #### Notes
-   * The notion of data in the databus is completely abstract, and templated
-   * over. Publishers and consumers of a given mimetype will need to agree
-   * what the actual data is and cast it appropriately before use.
-   */
-  data: T;
 }
 
 /**
  * A data registry object, for managing datasets in JupyterLab.
  */
 export class DataRegistry {
-  /**
-   * Construct a new data registry.
-   */
-  constructor() {}
-
   /**
    * Publish a dataset to the data registry.
    *
@@ -62,7 +45,7 @@ export class DataRegistry {
    *
    * @throws An error if the given dataset is already published.
    */
-  publish(dataset: IDataset<any>): IDisposable {
+  publish(dataset: IDataset): IDisposable {
     if (this._datasets.has(dataset)) {
       throw new Error(`Dataset already published`);
     }
@@ -84,10 +67,10 @@ export class DataRegistry {
    *
    * @returns An set of matching `IDataset` objects.
    */
-  filter<T>(func: (value: IDataset<T>) => boolean): Set<IDataset<T>> {
-    let result: Set<IDataset<T>> = new Set();
-    this._datasets.forEach((value: IDataset<T>) => {
-      if (func(value as IDataset<T>)) {
+  filter<T extends IDataset>(func: (value: IDataset) => value is T): Set<T> {
+    let result: Set<T> = new Set();
+    this._datasets.forEach((value: T) => {
+      if (func(value)) {
         result.add(value);
       }
     });
@@ -97,7 +80,7 @@ export class DataRegistry {
   /**
    * Return a set of all published datasets.
    */
-  get datasets(): Set<IDataset<any>> {
+  get datasets(): Set<IDataset> {
     return this._datasets;
   }
 
@@ -108,7 +91,7 @@ export class DataRegistry {
     return this._datasetsChanged;
   }
 
-  private _datasets: Set<IDataset<any>> = new Set();
+  private _datasets: Set<IDataset> = new Set();
   private _datasetsChanged = new Signal<
     this,
     DataRegistry.IDatasetsChangedArgs
@@ -126,7 +109,7 @@ export namespace DataRegistry {
     /**
      * The dataset begin added or removed.
      */
-    readonly dataset: IDataset<any>;
+    readonly dataset: IDataset;
 
     /**
      * The type of change.
