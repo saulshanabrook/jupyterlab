@@ -20,6 +20,7 @@ import {
 import { PromiseDelegate } from '@phosphor/coreutils';
 
 import { Message } from '@phosphor/messaging';
+import { Printing } from '@jupyterlab/apputils';
 
 /**
  * The data attribute added to a widget that can run code.
@@ -156,7 +157,7 @@ export class FileEditorCodeWrapper extends CodeEditorWrapper {
 /**
  * A widget for editors.
  */
-export class FileEditor extends Widget {
+export class FileEditor extends Widget implements Printing.IPrintable {
   /**
    * Construct a new editor widget.
    */
@@ -214,6 +215,13 @@ export class FileEditor extends Widget {
       default:
         break;
     }
+  }
+
+  /**
+   * Delegate printing to code editor widget
+   */
+  [Printing.symbol]() {
+    return Printing.getPrintFunction(this.editorWidget.editor);
   }
 
   /**

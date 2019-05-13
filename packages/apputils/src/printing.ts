@@ -60,7 +60,7 @@ export namespace Printing {
    * to a hidden iframe and printing that iframe.
    */
   export function printWidget(widget: Widget): Promise<void> {
-    return printContent(widget.node);
+    return printElement(widget.node);
   }
 
   const settings = ServerConnection.makeSettings();
@@ -79,27 +79,37 @@ export namespace Printing {
   }
 
   /**
-   * Prints a URL or an element in an iframe and then removes the iframe after printing.
+   * Prints an element by copying it into an iframe.
    */
-  async function printContent(textOrEl: string | HTMLElement): Promise<void> {
-    const isText = typeof textOrEl === 'string';
+  export function printElement(el: HTMLElement): Promise<void> {
+    return printContent(parent => parent.appendChild(el.cloneNode(true)));
+  }
+  /**
+   * Prints a URL or an callback that sets a node element in an iframe and then removes the iframe after printing.
+   */
+  export async function printContent(
+    textOrCallback: string | ((el: HTMLElement) => void)
+  ): Promise<void> {
     const iframe = createIFrame();
-
+    let loaded = resolveWhenLoaded(iframe);
     const parent = window.document.body;
     parent.appendChild(iframe);
-    if (isText) {
-      iframe.srcdoc = textOrEl as string;
-      await resolveWhenLoaded(iframe);
+    if (typeof textOrCallback === 'string') {
+      iframe.srcdoc = textOrCallback as string;
     } else {
       iframe.src = 'about:blank';
-      setIFrameNode(iframe, textOrEl as HTMLElement);
+      await loaded;
+      textOrCallback(iframe.contentDocument.body);
+      iframe.contentDocument.close();
     }
+    await loaded;
+    console.log('new new', iframe);
     const printed = resolveAfterEvent();
     launchPrint(iframe.contentWindow);
     // Once the print dialog has been dismissed, we regain event handling,
     // and it should be safe to discard the hidden iframe.
     await printed;
-    parent.removeChild(iframe);
+    // parent.removeChild(iframe);
   }
 
   /**
@@ -123,14 +133,6 @@ export namespace Printing {
     el.setAttribute('height', '0');
 
     return el;
-  }
-
-  /**
-   * Copies a node from the base document to the iframe.
-   */
-  function setIFrameNode(iframe: HTMLIFrameElement, node: HTMLElement) {
-    iframe.contentDocument.body.appendChild(node.cloneNode(true));
-    iframe.contentDocument.close();
   }
 
   /**

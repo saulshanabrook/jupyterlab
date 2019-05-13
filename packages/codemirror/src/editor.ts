@@ -13,7 +13,7 @@ import { IDisposable, DisposableDelegate } from '@phosphor/disposable';
 
 import { Signal } from '@phosphor/signaling';
 
-import { showDialog } from '@jupyterlab/apputils';
+import { showDialog, Printing } from '@jupyterlab/apputils';
 
 import { Poll } from '@jupyterlab/coreutils';
 
@@ -89,7 +89,8 @@ const HOVER_TIMEOUT = 1000;
 /**
  * CodeMirror editor.
  */
-export class CodeMirrorEditor implements CodeEditor.IEditor {
+export class CodeMirrorEditor
+  implements CodeEditor.IEditor, Printing.IPrintable {
   /**
    * Construct a CodeMirror editor.
    */
@@ -171,6 +172,19 @@ export class CodeMirrorEditor implements CodeEditor.IEditor {
         this.refresh();
       }
     });
+  }
+
+  /**
+   * Prints this editor by creating a new one in an iframe.
+   */
+  [Printing.symbol]() {
+    return async () => {
+      Printing.printContent(el => {
+        Private.createEditor(el, this._config)
+          .getDoc()
+          .setValue(this.model.value.text);
+      });
+    };
   }
 
   /**
