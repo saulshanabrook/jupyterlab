@@ -18,7 +18,7 @@ import { Panel, PanelLayout } from '@lumino/widgets';
 
 import { Widget } from '@lumino/widgets';
 
-import { ISessionContext } from '@jupyterlab/apputils';
+import { ISessionContext, ReactWidget } from '@jupyterlab/apputils';
 
 import * as nbformat from '@jupyterlab/nbformat';
 
@@ -29,6 +29,10 @@ import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 import { IOutputAreaModel } from './model';
+
+import { BehaviorSubject } from 'rxjs';
+import * as React from 'react';
+import OutputAreaComponent from './OutputArea';
 
 /**
  * The class name added to an output area widget.
@@ -93,7 +97,7 @@ const STDIN_INPUT_CLASS = 'jp-Stdin-input';
  * `null` model, and may want to listen to the `modelChanged`
  * signal.
  */
-export class OutputArea extends Widget {
+export class OutputArea extends ReactWidget {
   /**
    * Construct an output area widget.
    */
@@ -104,11 +108,7 @@ export class OutputArea extends Widget {
     this.rendermime = options.rendermime;
     this.contentFactory =
       options.contentFactory || OutputArea.defaultContentFactory;
-    this.layout = new PanelLayout();
-    for (let i = 0; i < model.length; i++) {
-      let output = model.get(i);
-      this._insertOutput(i, output);
-    }
+
     model.changed.connect(this.onModelChanged, this);
     model.stateChanged.connect(this.onStateChanged, this);
   }
@@ -132,7 +132,7 @@ export class OutputArea extends Widget {
    * A read-only sequence of the chidren widgets in the output area.
    */
   get widgets(): ReadonlyArray<Widget> {
-    return (this.layout as PanelLayout).widgets;
+    return [...this._widgets];
   }
 
   /**
@@ -185,13 +185,6 @@ export class OutputArea extends Widget {
 
     // Handle the execute reply.
     value.onReply = this._onExecuteReply;
-
-    // Handle stdin.
-    value.onStdin = msg => {
-      if (KernelMessage.isInputRequestMsg(msg)) {
-        this.onInputRequest(msg, value);
-      }
-    };
   }
 
   /**
@@ -206,6 +199,13 @@ export class OutputArea extends Widget {
     super.dispose();
   }
 
+  protected render() {
+    return React.createElement(OutputAreaComponent, {
+      model: this.model,
+      setWidgets: widgets => (this._widgets = widgets)
+    });
+  }
+
   /**
    * Follow changes on the model state.
    */
@@ -215,7 +215,6 @@ export class OutputArea extends Widget {
   ): void {
     switch (args.type) {
       case 'add':
-        this._insertOutput(args.newIndex, args.newValues[0]);
         this.outputLengthChanged.emit(this.model.length);
         break;
       case 'remove':
@@ -227,21 +226,12 @@ export class OutputArea extends Widget {
             // range of items removed from model
             // remove widgets corresponding to removed model items
             const startIndex = args.oldIndex;
-            for (
-              let i = 0;
-              i < args.oldValues.length && startIndex < this.widgets.length;
-              ++i
-            ) {
-              let widget = this.widgets[startIndex];
-              widget.parent = null;
-              widget.dispose();
-            }
 
             // apply item offset to target model item indices in _displayIdMap
             this._moveDisplayIdIndices(startIndex, args.oldValues.length);
 
             // prevent jitter caused by immediate height change
-            this._preventHeightChangeJitter();
+            // this._preventHeightChangeJitter();
           }
           this.outputLengthChanged.emit(this.model.length);
         }
@@ -315,6 +305,7 @@ export class OutputArea extends Widget {
     this._preventHeightChangeJitter();
   }
 
+  // TODO: Replicate this in react
   private _preventHeightChangeJitter() {
     // When an output area is cleared and then quickly replaced with new
     // content (as happens with @interact in widgets, for example), the
@@ -335,52 +326,9 @@ export class OutputArea extends Widget {
   }
 
   /**
-   * Handle an input request from a kernel.
-   */
-  protected onInputRequest(
-    msg: KernelMessage.IInputRequestMsg,
-    future: Kernel.IShellFuture
-  ): void {
-    // Add an output widget to the end.
-    let factory = this.contentFactory;
-    let stdinPrompt = msg.content.prompt;
-    let password = msg.content.password;
-
-    let panel = new Panel();
-    panel.addClass(OUTPUT_AREA_ITEM_CLASS);
-    panel.addClass(OUTPUT_AREA_STDIN_ITEM_CLASS);
-
-    let prompt = factory.createOutputPrompt();
-    prompt.addClass(OUTPUT_AREA_PROMPT_CLASS);
-    panel.addWidget(prompt);
-
-    let input = factory.createStdin({ prompt: stdinPrompt, password, future });
-    input.addClass(OUTPUT_AREA_OUTPUT_CLASS);
-    panel.addWidget(input);
-
-    let layout = this.layout as PanelLayout;
-    layout.addWidget(panel);
-
-    /**
-     * Wait for the stdin to complete, add it to the model (so it persists)
-     * and remove the stdin widget.
-     */
-    void input.value.then(value => {
-      // Use stdin as the stream so it does not get combined with stdout.
-      this.model.add({
-        output_type: 'stream',
-        name: 'stdin',
-        text: value + '\n'
-      });
-      panel.dispose();
-    });
-  }
-
-  /**
    * Update an output in the layout in place.
    */
   private _setOutput(index: number, model: IOutputModel): void {
-    let layout = this.layout as PanelLayout;
     let panel = layout.widgets[index] as Panel;
     let renderer = (panel.widgets
       ? panel.widgets[1]
@@ -406,17 +354,16 @@ export class OutputArea extends Widget {
   }
 
   /**
-   * Render and insert a single output into the layout.
+   * Render a single output .
    */
-  private _insertOutput(index: number, model: IOutputModel): void {
+  private _renderOutput(model: IOutputModel): Widget {
     let output = this.createOutputItem(model);
     if (output) {
       output.toggleClass(EXECUTE_CLASS, model.executionCount !== null);
     } else {
       output = new Widget();
     }
-    let layout = this.layout as PanelLayout;
-    layout.insertWidget(index, output);
+    return output;
   }
 
   /**
@@ -557,6 +504,7 @@ export class OutputArea extends Widget {
     KernelMessage.IExecuteReplyMsg
   >;
   private _displayIdMap = new Map<string, number[]>();
+  private _widgets: Widget[] = [];
 }
 
 export class SimplifiedOutputArea extends OutputArea {
