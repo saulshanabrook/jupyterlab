@@ -40,7 +40,7 @@ const BREADCRUMB_HOME_CLASS = 'jp-BreadCrumbs-home';
 /**
  * The class name added to the breadcrumb node.
  */
-const BREADCRUMB_ITEM_CLASS = 'jp-BreadCrumbs-item';
+const BREADCRUMB_ITEM_CLASS = 'jp-BreadCrumbs-items';
 
 /**
  * Bread crumb paths.
